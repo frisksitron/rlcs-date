@@ -1,0 +1,23 @@
+name: ingest-data
+on:
+  schedule:
+    - cron: "5,11,27,35,43,52 * * * *" # Avoid running at common times, as the action might not be ran
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ingest event data
+        run: |
+          curl --request POST \
+          --url 'https://rlcs-date.vercel.app/api/ingest/events' \
+          --header 'Authorization: Bearer ${{ secrets.API_SECRET_KEY }}'
+      - name: Ingest leaderboard data
+        run: |
+          curl --request POST \
+          --url 'https://rlcs-date.vercel.app/api/ingest/leaderboard' \
+          --header 'Authorization: Bearer ${{ secrets.API_SECRET_KEY }}'
+      - name: Ingest transfers data
+        run: |
+          curl --request POST \
+          --url 'https://rlcs-date.vercel.app/api/ingest/transfers' \
+          --header 'Authorization: Bearer ${{ secrets.API_SECRET_KEY }}'

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Match" ALTER COLUMN "startTime" SET DATA TYPE TEXT;

@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id            String  @id @unique
+  name          String
+  slug          String
+  startDate     String
+  endDate       String
+  liquipediaUrl String
+  isLan         Boolean
+  region        String
+  matches       Match[]
+}
+
+model Match {
+  id          String  @id @unique
+  blueTeam    String?
+  orangeTeam  String?
+  startTime   String?
+  blueScore   Int?
+  orangeScore Int?
+  Event       Event?  @relation(fields: [eventId], references: [id])
+  eventId     String?
+}
+
+model Leaderboard {
+  id                       Int     @id @default(autoincrement())
+  name                     String
+  tag                      String
+  region                   String
+  points                   Int
+  qualifiedForChampionship Boolean
+  qualifiedForWildcard     Boolean
+}
+
+model Transfer {
+  id          Int     @id @default(autoincrement())
+  date        String
+  players     String
+  oldTeamName String?
+  oldTeamTag  String?
+  newTeamName String?
+  newTeamTag  String?
+  source      String?
+}
