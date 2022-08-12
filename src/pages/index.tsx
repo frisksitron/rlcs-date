@@ -53,7 +53,7 @@ const Home: NextPage<HomeProps> = ({
       {currentEvent ? (
         <div>
           <h1 className="text-2xl font-bold">{currentEvent?.name}</h1>
-          <h2 className="text-lg mt-2">Today's matches</h2>
+          <h2 className="text-lg mt-2">Today&apos;s matches</h2>
           <h2 className="p-2"></h2>
           <MatchList matches={data!} />
           <div className="text-center mt-4">
