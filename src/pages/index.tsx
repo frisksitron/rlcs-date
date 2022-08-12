@@ -42,7 +42,7 @@ const Home: NextPage<HomeProps> = ({
 }) => {
   const firstUpcomingEvent = upcomingEvents[0];
   const { data } = useSWR(
-    "matches",
+    "todays_matches",
     (url) => fetchMatches(url, currentEvent?.id!),
     {
       fallbackData: matches,
