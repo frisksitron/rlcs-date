@@ -5,7 +5,7 @@ import { ParsedUrlQuery } from "querystring";
 import { formatISO } from "date-fns";
 import * as R from "remeda";
 import MatchList from "@/components/MatchList";
-import { getEventMatches } from "@/clients/octaneClient";
+import { getEventMatches } from "@/clients/rlcsdateClient";
 import { dehydrate, QueryClient, useQuery } from "@tanstack/react-query";
 
 type EventPageProps = {

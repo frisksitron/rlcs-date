@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import type { Event, Match, Transfer } from "@prisma/client";
 import { EventWithMatches } from "@/types";
 import MatchList from "@/components/MatchList";
-import { getTodaysMatches } from "@/clients/octaneClient";
+import { getTodaysMatches } from "@/clients/rlcsdateClient";
 import {
   getCurrentEvent,
   getPreviousEvents,
