@@ -12,9 +12,7 @@ const rlcsdateClient = axios.create({
   },
 });
 
-if (process.env.NODE_ENV === "development") {
-  rlcsdateClient.defaults.baseURL = "http://localhost:3000/";
-}
+rlcsdateClient.defaults.baseURL = process.env.API_URL;
 
 export const getEvent = async (eventId: string) => {
   const response = await rlcsdateClient.get<EventResponse>(
