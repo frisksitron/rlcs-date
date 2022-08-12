@@ -5,6 +5,8 @@ import TeamLogo from "@/components/TeamLogo";
 import { twMerge } from "tailwind-merge";
 import { dehydrate, QueryClient, useQuery } from "@tanstack/react-query";
 import { getLeaderboard } from "@/clients/rlcsdateClient";
+import prisma from "@/database";
+import * as R from "remeda";
 
 const LeaderboardTable = () => {
   const { data: leaderboard } = useQuery(["leaderboard"], getLeaderboard);
@@ -101,7 +103,10 @@ const Leaderboard: NextPage = () => {
 export const getStaticProps: GetStaticProps = async (context) => {
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery(["leaderboard"], getLeaderboard);
+  const leaderboard = await prisma.leaderboard.findMany();
+  const sorted = R.sortBy(leaderboard, [(x) => x.points, "desc"]);
+
+  queryClient.setQueryData(["leaderboard"], sorted);
 
   return {
     props: {
