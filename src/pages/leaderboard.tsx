@@ -1,30 +1,13 @@
-import prisma from "@/database";
 import { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
-import useSWR, { SWRConfig } from "swr";
-import { LeaderboardResponse } from "@/pages/api/leaderboard";
 import classNames from "classnames";
 import TeamLogo from "@/components/TeamLogo";
-import * as R from "remeda";
 import { twMerge } from "tailwind-merge";
-
-type LeaderboardProps = {
-  fallback: {
-    "/api/leaderboard": LeaderboardResponse;
-  };
-};
-
-const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw Error("Error fetching leaderboard");
-  }
-  const data: LeaderboardResponse = await res.json();
-  return data;
-};
+import { dehydrate, QueryClient, useQuery } from "@tanstack/react-query";
+import { getLeaderboard } from "@/clients/rlcsdateClient";
 
 const LeaderboardTable = () => {
-  const { data } = useSWR("/api/leaderboard", fetcher);
+  const { data: leaderboard } = useQuery(["leaderboard"], getLeaderboard);
 
   return (
     <div className="overflow-x-auto">
@@ -38,7 +21,7 @@ const LeaderboardTable = () => {
           </tr>
         </thead>
         <tbody>
-          {data?.leaderboard?.map((team, index) => {
+          {leaderboard?.map((team, index) => {
             const qualifiedClass = classNames({
               "bg-green-900": team.qualifiedForChampionship,
               "bg-yellow-900": team.qualifiedForWildcard,
@@ -85,7 +68,7 @@ const LeaderboardTable = () => {
   );
 };
 
-const Leaderboard: NextPage<LeaderboardProps> = ({ fallback }) => {
+const Leaderboard: NextPage = () => {
   return (
     <div>
       <Head>
@@ -96,7 +79,7 @@ const Leaderboard: NextPage<LeaderboardProps> = ({ fallback }) => {
         />
       </Head>
 
-      <h1 className={"text-2xl"}>Leaderboard RLCS 2021-2022</h1>
+      <h1 className="text-2xl">Leaderboard RLCS 2021-2022</h1>
       <div className="p-4"></div>
       <div className="flex flex-col md:flex-row">
         <div className="flex items-center">
@@ -110,22 +93,19 @@ const Leaderboard: NextPage<LeaderboardProps> = ({ fallback }) => {
         </div>
       </div>
       <div className="p-2"></div>
-      <SWRConfig value={{ fallback }}>
-        <LeaderboardTable />
-      </SWRConfig>
+      <LeaderboardTable />
     </div>
   );
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
-  const leaderboard = await prisma.leaderboard.findMany();
-  const sorted = R.sortBy(leaderboard, [(x) => x.points, "desc"]);
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery(["leaderboard"], getLeaderboard);
 
   return {
     props: {
-      fallback: {
-        "/api/leaderboard": { leaderboard: sorted },
-      },
+      dehydratedState: dehydrate(queryClient),
     },
     revalidate: 1,
   };

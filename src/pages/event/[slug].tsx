@@ -1,38 +1,20 @@
 import type { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import type { Event, Match } from "@prisma/client";
 import prisma from "@/database";
-import { EventResponse } from "@/pages/api/event/[id]";
-import useSWR from "swr";
 import { ParsedUrlQuery } from "querystring";
 import { formatISO } from "date-fns";
 import * as R from "remeda";
 import MatchList from "@/components/MatchList";
 import { getEventMatches } from "@/clients/octaneClient";
+import { dehydrate, QueryClient, useQuery } from "@tanstack/react-query";
 
 type EventPageProps = {
-  eventId: string;
-  eventFallback: Event;
-  matchesFallback: Match[];
+  event: Event;
 };
 
 interface Params extends ParsedUrlQuery {
   slug: string;
 }
-
-const fetchEvent = async (url: string, id: number) => {
-  const res = await fetch(url + id);
-  if (!res.ok) {
-    throw Error("Error fetching event");
-  }
-  const data: EventResponse = await res.json();
-  return data;
-};
-
-const fetchMatches = async (_url: string, eventId: string) => {
-  const [event, stage] = eventId.split("-");
-  const matches = await getEventMatches(event, stage);
-  return matches;
-};
 
 const groupByDate = (matches: Match[] | undefined) => {
   if (!matches || matches.length === 0) {
@@ -76,61 +58,55 @@ const Schedules = ({ matches }: { matches: Match[] }) => {
   );
 };
 
-const Event: NextPage<EventPageProps> = ({
-  eventId,
-  eventFallback,
-  matchesFallback,
-}) => {
-  const { data: event } = useSWR(["/api/event/", eventId], fetchEvent, {
-    fallbackData: eventFallback,
-  });
-  const { data: matches } = useSWR(["matches", eventId], fetchMatches, {
-    fallbackData: matchesFallback,
-  });
+const Event: NextPage<EventPageProps> = ({ event }) => {
+  const { data: matches } = useQuery(["matches", event.id], () =>
+    getEventMatches(event.id)
+  );
 
   return (
     <div>
-      {event && (
-        <div className={"col-span-3"}>
-          <div className={"mb-10"}>
-            <h2 className={"text-3xl mb-2"}>{event.name}</h2>
-            <a
-              href={event?.liquipediaUrl}
-              className={"link text-sm"}
-              target={"_blank"}
-              rel="noreferrer"
-            >
-              Liquipedia page
-            </a>
-          </div>
-
-          <Schedules matches={matches || []} />
+      <div className={"col-span-3"}>
+        <div className={"mb-10"}>
+          <h2 className={"text-3xl mb-2"}>{event.name}</h2>
+          <a
+            href={event.liquipediaUrl}
+            className={"link text-sm"}
+            target={"_blank"}
+            rel="noreferrer"
+          >
+            Liquipedia page
+          </a>
         </div>
-      )}
+
+        <Schedules matches={matches || []} />
+      </div>
     </div>
   );
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
+  const queryClient = new QueryClient();
   const { slug } = context.params as Params;
   const event = await prisma.event.findFirst({
     where: { slug },
   });
 
-  const matches: Match[] = [];
-
   if (event) {
-    const todaysMatches = await fetchMatches("matches", event.id);
-    matches.push(...todaysMatches);
+    await queryClient.prefetchQuery(["matches", event.id], () =>
+      getEventMatches(event.id)
+    );
+
+    return {
+      props: {
+        event,
+        dehydratedState: dehydrate(queryClient),
+        revalidate: 1,
+      },
+    };
   }
 
   return {
-    props: {
-      eventId: event?.id,
-      eventFallback: event,
-      matchesFallback: matches,
-      revalidate: 1,
-    },
+    notFound: true,
   };
 };
 
@@ -144,7 +120,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   });
   return {
     paths,
-    fallback: false,
+    fallback: "blocking",
   };
 };
 

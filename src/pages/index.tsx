@@ -2,7 +2,6 @@ import type { GetStaticProps, NextPage } from "next";
 import Link from "next/link";
 import prisma from "@/database";
 import { formatDistanceToNow, format } from "date-fns";
-import useSWR from "swr";
 import dynamic from "next/dynamic";
 import type { Event, Match, Transfer } from "@prisma/client";
 import { EventWithMatches } from "@/types";
@@ -14,48 +13,42 @@ import {
   getUpcomingEvents,
 } from "@/helpers";
 import Transfers from "@/components/Transfers";
+import { dehydrate, QueryClient, useQuery } from "@tanstack/react-query";
 
 const DynamicCountdown = dynamic(() => import("@/components/Countdown"), {
   ssr: false,
 });
 
 type HomeProps = {
-  currentEvent: EventWithMatches | null;
+  currentEvent: EventWithMatches | undefined;
   upcomingEvents: Event[];
   previousEvents: Event[];
-  matches: Match[];
-  transfers: Transfer[];
-};
-
-const fetchMatches = async (_url: string, eventId: string) => {
-  const [event, stage] = eventId.split("-");
-  const matches = await getTodaysMatches(event, stage);
-  return matches;
 };
 
 const Home: NextPage<HomeProps> = ({
   currentEvent,
   upcomingEvents,
   previousEvents,
-  matches,
-  transfers,
 }) => {
   const firstUpcomingEvent = upcomingEvents[0];
-  const { data } = useSWR(
-    "todays_matches",
-    (url) => fetchMatches(url, currentEvent?.id!),
-    {
-      fallbackData: matches,
-    }
+  const { data: matches } = useQuery(["todays_matches", currentEvent?.id], () =>
+    getTodaysMatches(currentEvent?.id)
   );
+
   return (
     <div>
       {currentEvent ? (
         <div>
           <h1 className="text-2xl font-bold">{currentEvent?.name}</h1>
-          <h2 className="text-lg mt-2">Today&apos;s matches</h2>
-          <h2 className="p-2"></h2>
-          <MatchList matches={data!} />
+          {matches ? (
+            <>
+              <h2 className="text-lg mt-2">Today&apos;s matches</h2>
+              <h2 className="p-2"></h2>
+              <MatchList matches={matches} />
+            </>
+          ) : (
+            <h2 className="text-lg mt-2">No matches today</h2>
+          )}
           <div className="text-center mt-4">
             <Link href={`event/${currentEvent.slug}`}>
               <a className="btn btn-md btn-primary">See complete schedule</a>
@@ -151,7 +144,7 @@ const Home: NextPage<HomeProps> = ({
             <div className="py-4 px-6 bg-neutral text-neutral-content rounded-lg">
               <h2 className={"text-md uppercase"}>Recent transfers</h2>
               <div className="p-2"></div>
-              <Transfers fallback={transfers} />
+              <Transfers />
             </div>
           </div>
         </div>
@@ -161,29 +154,33 @@ const Home: NextPage<HomeProps> = ({
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
+  const queryClient = new QueryClient();
   const events = await prisma.event.findMany({
     orderBy: { startDate: "desc" },
     take: 10,
   });
+
   const currentEvent = getCurrentEvent(events);
-  const matches: Match[] = [];
 
   if (currentEvent) {
-    const todaysMatches = await fetchMatches("matches", currentEvent?.id);
-    matches.push(...todaysMatches);
+    await queryClient.prefetchQuery(["todays_matches", currentEvent.id], () =>
+      getTodaysMatches(currentEvent.id)
+    );
   }
 
   const transfers = await prisma.transfer.findMany({
     take: 5,
   });
 
+  queryClient.setQueryData(["transfers"], transfers);
+
   return {
     props: {
-      currentEvent: currentEvent ?? null,
+      currentEvent: currentEvent,
       upcomingEvents: getUpcomingEvents(events),
       previousEvents: getPreviousEvents(events),
-      matches,
       transfers,
+      dehydratedState: dehydrate(queryClient),
       revalidate: 1,
     },
   };

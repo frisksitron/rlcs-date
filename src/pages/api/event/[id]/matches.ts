@@ -12,8 +12,7 @@ export default async (
   res: NextApiResponse<MatchesResponse>
 ) => {
   const id = req.query.id!.toString();
-  const [eventId, stageId] = id.split("-");
-  const matches = await getEventMatches(eventId, stageId);
+  const matches = await getEventMatches(id);
 
   res.status(200).json({ matches });
 };

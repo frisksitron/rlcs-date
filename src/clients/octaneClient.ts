@@ -98,18 +98,22 @@ export const getEvents = async (after: string, group: string) => {
   return response.data.events;
 };
 
-export const getEventMatches = async (eventId: string, stageId: string) => {
+export const getEventMatches = async (eventId: string) => {
+  const [event, stage] = eventId.split("-");
   const response = await octaneClient.get<OctaneMatchesResponse>(
-    `matches?event=${eventId}&stage=${stageId}`
+    `matches?event=${event}&stage=${stage}`
   );
-  const mapped = response.data.matches.map(fromOctaneMatch);
-
-  return mapped;
+  return response.data.matches.map(fromOctaneMatch);
 };
 
-export const getTodaysMatches = async (eventId: string, stageId: string) => {
+export const getTodaysMatches = async (eventId: string | undefined) => {
+  if (!eventId) {
+    return [];
+  }
+
+  const [event, stage] = eventId.split("-");
   const response = await octaneClient.get<OctaneMatchesResponse>(
-    `matches?event=${eventId}&stage=${stageId}`
+    `matches?event=${event}&stage=${stage}`
   );
   const mapped = response.data.matches.map(fromOctaneMatch);
   const todaysMatches = R.pipe(

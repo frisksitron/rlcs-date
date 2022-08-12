@@ -1,6 +1,5 @@
 import { TransfersResponse } from "@/pages/api/transfers";
-import { Transfer } from "@prisma/client";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 
 const fetcher = async () => {
   const res = await fetch(`/api/transfers`);
@@ -11,10 +10,8 @@ const fetcher = async () => {
   return data.transfers;
 };
 
-const Transfers: React.FC<{ fallback: Transfer[] }> = ({ fallback }) => {
-  const { data } = useSWR("transfers", fetcher, {
-    fallbackData: fallback,
-  });
+const Transfers = () => {
+  const { data } = useQuery(["transfers"], fetcher);
 
   return (
     <div>
