@@ -12,7 +12,7 @@ const rlcsdateClient = axios.create({
   },
 });
 
-rlcsdateClient.defaults.baseURL = process.env.API_URL;
+rlcsdateClient.defaults.baseURL = process.env.API_URL || process.env.VERCEL_URL;
 
 export const getEvent = async (eventId: string) => {
   const response = await rlcsdateClient.get<EventResponse>(
