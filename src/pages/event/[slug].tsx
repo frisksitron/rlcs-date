@@ -2,30 +2,36 @@ import type { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import type { Event, Match } from "@prisma/client";
 import prisma from "@/database";
 import { EventResponse } from "@/pages/api/event/[id]";
-import useSWR, { SWRConfig, unstable_serialize } from "swr";
+import useSWR from "swr";
 import { ParsedUrlQuery } from "querystring";
 import { formatISO } from "date-fns";
 import * as R from "remeda";
 import MatchList from "@/components/MatchList";
+import { getEventMatches } from "@/clients/octaneClient";
 
 type EventPageProps = {
   eventId: string;
-  fallback: {
-    [key: string]: EventResponse;
-  };
+  eventFallback: Event;
+  matchesFallback: Match[];
 };
 
 interface Params extends ParsedUrlQuery {
   slug: string;
 }
 
-const fetcher = async (url: string, id: number) => {
+const fetchEvent = async (url: string, id: number) => {
   const res = await fetch(url + id);
   if (!res.ok) {
     throw Error("Error fetching event");
   }
   const data: EventResponse = await res.json();
   return data;
+};
+
+const fetchMatches = async (_url: string, eventId: string) => {
+  const [event, stage] = eventId.split("-");
+  const matches = await getEventMatches(event, stage);
+  return matches;
 };
 
 const groupByDate = (matches: Match[] | undefined) => {
@@ -70,16 +76,30 @@ const Schedules = ({ matches }: { matches: Match[] }) => {
   );
 };
 
-const EventDetails = ({ eventId }: { eventId: string }) => {
-  const { data } = useSWR(["/api/event/", eventId], fetcher);
+const Event: NextPage<EventPageProps> = ({
+  eventId,
+  eventFallback,
+  matchesFallback,
+}) => {
+  const { data: event } = useSWR(["/api/event/", eventId], fetchEvent, {
+    fallbackData: eventFallback,
+  });
+  const { data: matches } = useSWR(
+    "matches",
+    (url) => fetchMatches(url, eventId),
+    {
+      fallbackData: matchesFallback,
+    }
+  );
+
   return (
     <div>
-      {data && (
+      {event && (
         <div className={"col-span-3"}>
           <div className={"mb-10"}>
-            <h2 className={"text-3xl mb-2"}>{data.name}</h2>
+            <h2 className={"text-3xl mb-2"}>{event.name}</h2>
             <a
-              href={data?.liquipediaUrl}
+              href={event?.liquipediaUrl}
               className={"link text-sm"}
               target={"_blank"}
               rel="noreferrer"
@@ -88,18 +108,10 @@ const EventDetails = ({ eventId }: { eventId: string }) => {
             </a>
           </div>
 
-          <Schedules matches={data.matches} />
+          <Schedules matches={matches || []} />
         </div>
       )}
     </div>
-  );
-};
-
-const Event: NextPage<EventPageProps> = ({ eventId, fallback }) => {
-  return (
-    <SWRConfig value={{ fallback }}>
-      <EventDetails eventId={eventId} />
-    </SWRConfig>
   );
 };
 
@@ -107,17 +119,20 @@ export const getStaticProps: GetStaticProps = async (context) => {
   const { slug } = context.params as Params;
   const event = await prisma.event.findFirst({
     where: { slug },
-    include: { matches: true },
   });
+
+  const matches: Match[] = [];
+
+  if (event) {
+    const todaysMatches = await fetchMatches("matches", event.id);
+    matches.push(...todaysMatches);
+  }
 
   return {
     props: {
       eventId: event?.id,
-      fallback: {
-        [unstable_serialize(["/api/event/", event?.id])]: {
-          event,
-        },
-      },
+      eventFallback: event,
+      matchesFallback: matches,
       revalidate: 1,
     },
   };

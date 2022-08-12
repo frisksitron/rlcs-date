@@ -53,9 +53,14 @@ const Home: NextPage<HomeProps> = ({
       {currentEvent ? (
         <div>
           <h1 className="text-2xl font-bold">{currentEvent?.name}</h1>
-          <h2 className="text-lg">Todays matches</h2>
+          <h2 className="text-lg mt-2">Today's matches</h2>
           <h2 className="p-2"></h2>
           <MatchList matches={data!} />
+          <div className="text-center mt-4">
+            <Link href={`event/${currentEvent.slug}`}>
+              <a className="btn btn-md btn-primary">See complete schedule</a>
+            </Link>
+          </div>
         </div>
       ) : (
         <div

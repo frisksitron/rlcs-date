@@ -102,8 +102,9 @@ export const getEventMatches = async (eventId: string, stageId: string) => {
   const response = await octaneClient.get<OctaneMatchesResponse>(
     `matches?event=${eventId}&stage=${stageId}`
   );
+  const mapped = response.data.matches.map(fromOctaneMatch);
 
-  return response.data.matches;
+  return mapped;
 };
 
 export const getTodaysMatches = async (eventId: string, stageId: string) => {
@@ -116,5 +117,6 @@ export const getTodaysMatches = async (eventId: string, stageId: string) => {
     R.filter((x) => isSameDay(new Date((x.startTime ??= "0")), new Date())),
     R.sortBy((x) => new Date((x.startTime ??= "0")))
   );
+
   return todaysMatches;
 };
