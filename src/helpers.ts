@@ -29,6 +29,7 @@ const NameToShortNameMap = new Map([
   ["SMPR Esports", "SMPR"],
   ["Evil Geniuses", "EG"],
   ["Bravado Gaming", "BVD"],
+  ["NRG Esports", "NRG"],
 ]);
 
 export const toShortName = (name: string) => {

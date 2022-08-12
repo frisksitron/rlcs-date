@@ -19,14 +19,14 @@ const MatchList = ({ matches }: { matches: Match[] }) => {
             className={`flex justify-between lg:px-10 p-4 first:rounded-t-lg last:rounded-b-lg ${rowColor}`}
           >
             <div className="w-5/12">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center">
                 <div className="avatar">
                   <div className="w-6 h-6 lg:w-12 lg:h-12">
                     <TeamLogo team={toShortName(match.blueTeam!)} />
                   </div>
                 </div>
-                <div className={"pl-1"}>
-                  <div className="lg:hidden">
+                <div className={"pl-2 md:pl-5 shrink-0 flex-1 min-w-0"}>
+                  <div className="lg:hidden overflow-hidden text-ellipsis whitespace-nowrap">
                     {toShortName(match.blueTeam!)}
                   </div>
                   <div className="hidden lg:block">{match.blueTeam}</div>
@@ -34,7 +34,7 @@ const MatchList = ({ matches }: { matches: Match[] }) => {
               </div>
             </div>
             <div className="w-2/12">
-              <div className={"flex justify-center items-center h-full"}>
+              <div className={"flex justify-center items-center h-full "}>
                 {match.blueScore === null && match.orangeScore === null ? (
                   format(new Date(match.startTime!), "HH:mm")
                 ) : (
@@ -45,9 +45,9 @@ const MatchList = ({ matches }: { matches: Match[] }) => {
               </div>
             </div>
             <div className="w-5/12">
-              <div className="flex justify-end items-center space-x-3">
-                <div className={"pr-1"}>
-                  <div className="lg:hidden">
+              <div className="flex justify-end items-center text-right">
+                <div className={"pr-2 md:pr-5 shrink-0 flex-1 min-w-0"}>
+                  <div className="lg:hidden overflow-hidden text-ellipsis whitespace-nowrap">
                     {toShortName(match.orangeTeam!)}
                   </div>
                   <div className="hidden lg:block">{match.orangeTeam}</div>
