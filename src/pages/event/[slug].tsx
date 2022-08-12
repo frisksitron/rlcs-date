@@ -6,6 +6,7 @@ import { formatISO } from "date-fns";
 import * as R from "remeda";
 import MatchList from "@/components/MatchList";
 import { getEventMatches } from "@/clients/rlcsdateClient";
+import { getEventMatches as getEventMatchesFromOctane } from "@/clients/octaneClient";
 import { dehydrate, QueryClient, useQuery } from "@tanstack/react-query";
 
 type EventPageProps = {
@@ -93,7 +94,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
 
   if (event) {
     await queryClient.prefetchQuery(["matches", event.id], () =>
-      getEventMatches(event.id)
+      getEventMatchesFromOctane(event.id)
     );
 
     return {

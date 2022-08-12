@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { Match } from "@prisma/client";
 import { getTodaysMatches } from "@/clients/octaneClient";
 import { MatchesResponse } from "./matches";
 

@@ -4,15 +4,7 @@ import { MatchesResponse } from "@/pages/api/event/[id]/matches";
 import { TransfersResponse } from "@/pages/api/transfers";
 import { LeaderboardResponse } from "@/pages/api/leaderboard";
 
-const rlcsdateClient = axios.create({
-  headers: {
-    "User-Agent": `rlcs.date/1.0 (${
-      process.env.NODE_ENV === "production" ? "PRODUCTION" : `DEVELOPMENT`
-    })`,
-  },
-});
-
-rlcsdateClient.defaults.baseURL = process.env.API_URL || process.env.VERCEL_URL;
+const rlcsdateClient = axios.create();
 
 export const getEvent = async (eventId: string) => {
   const response = await rlcsdateClient.get<EventResponse>(

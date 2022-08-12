@@ -7,6 +7,7 @@ import type { Event, Match, Transfer } from "@prisma/client";
 import { EventWithMatches } from "@/types";
 import MatchList from "@/components/MatchList";
 import { getTodaysMatches } from "@/clients/rlcsdateClient";
+import { getTodaysMatches as getTodaysMatchesFromOctane } from "@/clients/octaneClient";
 import {
   getCurrentEvent,
   getPreviousEvents,
@@ -164,7 +165,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
 
   if (currentEvent) {
     await queryClient.prefetchQuery(["todays_matches", currentEvent.id], () =>
-      getTodaysMatches(currentEvent.id)
+      getTodaysMatchesFromOctane(currentEvent.id)
     );
   }
 
