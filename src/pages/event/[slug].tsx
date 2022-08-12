@@ -84,13 +84,9 @@ const Event: NextPage<EventPageProps> = ({
   const { data: event } = useSWR(["/api/event/", eventId], fetchEvent, {
     fallbackData: eventFallback,
   });
-  const { data: matches } = useSWR(
-    "matches",
-    (url) => fetchMatches(url, eventId),
-    {
-      fallbackData: matchesFallback,
-    }
-  );
+  const { data: matches } = useSWR(["matches", eventId], fetchMatches, {
+    fallbackData: matchesFallback,
+  });
 
   return (
     <div>
