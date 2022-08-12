@@ -13,8 +13,7 @@ export default async (
 ) => {
   const id = req.query.id!.toString();
   const [eventId, stageId] = id.split("-");
-  const octaneMatches = await getEventMatches(eventId, stageId);
-  const matches = octaneMatches.map(fromOctaneMatch);
+  const matches = await getEventMatches(eventId, stageId);
 
   res.status(200).json({ matches });
 };
