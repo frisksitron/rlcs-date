@@ -19,7 +19,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <Navbar />
       </header>
 
-      <main className={"container mx-auto px-4 mb-20"}>
+      <main className={"container max-w-5xl mx-auto px-4 mb-20"}>
         <Component {...pageProps} />
       </main>
 
