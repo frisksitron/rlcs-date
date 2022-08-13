@@ -49,13 +49,13 @@ const Home: NextPage<HomeProps> = ({
           <h1 className="text-2xl font-bold">{currentEvent?.name}</h1>
           {isLoading ? (
             <>
-              <h2 className="text-lg mt-2">Today&apos;s matches</h2>
+              <h2 className="text-lg mt-2 w-36 h-6 bg-slate-500 animate-pulse rounded-sm"></h2>
               <h2 className="p-2"></h2>
               <MatchListSkeleton />
             </>
           ) : matches ? (
             <>
-              <h2 className="text-lg mt-2">Today&apos;s matches</h2>
+              <h2 className="text-lg mt-2 h-6">Today&apos;s matches</h2>
               <h2 className="p-2"></h2>
               <DynamicMatchList matches={matches} />
             </>
