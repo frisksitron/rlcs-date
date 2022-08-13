@@ -15,8 +15,13 @@ import {
 } from "@/helpers";
 import Transfers from "@/components/Transfers";
 import { dehydrate, QueryClient, useQuery } from "@tanstack/react-query";
+import MatchListSkeleton from "@/components/MatchList/skeleton";
 
 const DynamicCountdown = dynamic(() => import("@/components/Countdown"), {
+  ssr: false,
+});
+
+const DynamicMatchList = dynamic(() => import("@/components/MatchList"), {
   ssr: false,
 });
 
@@ -32,8 +37,9 @@ const Home: NextPage<HomeProps> = ({
   previousEvents,
 }) => {
   const firstUpcomingEvent = upcomingEvents[0];
-  const { data: matches } = useQuery(["todays_matches", currentEvent?.id], () =>
-    getTodaysMatches(currentEvent?.id)
+  const { data: matches, isLoading } = useQuery(
+    ["todays_matches", currentEvent?.id],
+    () => getTodaysMatches(currentEvent?.id)
   );
 
   return (
@@ -41,11 +47,17 @@ const Home: NextPage<HomeProps> = ({
       {currentEvent ? (
         <div>
           <h1 className="text-2xl font-bold">{currentEvent?.name}</h1>
-          {matches ? (
+          {isLoading ? (
             <>
               <h2 className="text-lg mt-2">Today&apos;s matches</h2>
               <h2 className="p-2"></h2>
-              <MatchList matches={matches} />
+              <MatchListSkeleton />
+            </>
+          ) : matches ? (
+            <>
+              <h2 className="text-lg mt-2">Today&apos;s matches</h2>
+              <h2 className="p-2"></h2>
+              <DynamicMatchList matches={matches} />
             </>
           ) : (
             <h2 className="text-lg mt-2">No matches today</h2>
@@ -164,9 +176,9 @@ export const getStaticProps: GetStaticProps = async (context) => {
   const currentEvent = getCurrentEvent(events);
 
   if (currentEvent) {
-    await queryClient.prefetchQuery(["todays_matches", currentEvent.id], () =>
-      getTodaysMatchesFromOctane(currentEvent.id)
-    );
+    // await queryClient.prefetchQuery(["todays_matches", currentEvent.id], () =>
+    //   getTodaysMatchesFromOctane(currentEvent.id)
+    // );
   }
 
   const transfers = await prisma.transfer.findMany({
