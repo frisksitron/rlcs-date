@@ -32,21 +32,25 @@ const TodaysMatches = ({ event }: { event: Event }) => {
   return (
     <div>
       <h1 className="text-2xl font-bold">{event.name}</h1>
-      {isLoading ? (
+
+      {isLoading && (
         <>
           <h2 className="mt-2 h-6 w-36 animate-pulse rounded-sm bg-slate-500 text-lg"></h2>
           <h2 className="p-2"></h2>
           <MatchListSkeleton />
         </>
-      ) : matches ? (
+      )}
+
+      {matches ? (
         <>
           <h2 className="mt-2 h-6 text-lg">Today&apos;s matches</h2>
           <h2 className="p-2"></h2>
           <DynamicMatchList matches={matches} />
         </>
       ) : (
-        <h2 className="mt-2 text-lg">No matches today</h2>
+        !isLoading && <h2 className="mt-2 text-lg">No matches today</h2>
       )}
+
       <div className="mt-4 text-center">
         <Link href={`event/${event.slug}`}>
           <a className="btn btn-primary btn-md">See complete schedule</a>
@@ -60,10 +64,14 @@ const Home: NextPage = () => {
   const { data: events } = useQuery(["events"], getEvents);
 
   const [currentEvent, setCurrentEvent] = useState<Event | undefined>(
-    undefined
+    events ? getCurrentEvent(events) : undefined
   );
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [previousEvents, setPreviousEvents] = useState<Event[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>(
+    events ? getUpcomingEvents(events) : []
+  );
+  const [previousEvents, setPreviousEvents] = useState<Event[]>(
+    events ? getPreviousEvents(events) : []
+  );
 
   useEffect(() => {
     if (events && events.length > 0) {
@@ -100,41 +108,42 @@ const Home: NextPage = () => {
 
       <div className="mt-10 flex flex-col justify-between gap-5 lg:flex-row">
         <div className="flex grow flex-col gap-5 lg:basis-4/6">
-          <div>
-            <div className="rounded-lg bg-neutral py-4 px-6 text-neutral-content">
-              <h2 className={"text-md uppercase"}>Upcoming RLCS events</h2>
-              <div className="p-2"></div>
-              <div>
-                {upcomingEvents?.map((event, i) => {
-                  const date = new Date(event.startDate);
-                  const month = format(date, "MMMM");
+          {upcomingEvents.length > 0 && (
+            <div>
+              <div className="rounded-lg bg-neutral py-4 px-6 text-neutral-content">
+                <h2 className={"text-md uppercase"}>Upcoming RLCS events</h2>
+                <div className="p-2"></div>
+                <div>
+                  {upcomingEvents?.map((event, i) => {
+                    const date = new Date(event.startDate);
+                    const month = format(date, "MMMM");
 
-                  return (
-                    <div className={"mb-5 flex"} key={i}>
-                      <div className="mt-1.5">
-                        <div className="mr-6 flex h-24 w-20 flex-col items-center justify-center rounded-lg border-2 border-solid">
-                          <div className="-mt-1 mb-2 w-full border-b-2 border-solid"></div>
-                          <div className="text-2xl font-bold ">
-                            {date.getDate()}.
+                    return (
+                      <div className={"mb-5 flex"} key={i}>
+                        <div className="mt-1.5">
+                          <div className="mr-6 flex h-24 w-20 flex-col items-center justify-center rounded-lg border-2 border-solid">
+                            <div className="-mt-1 mb-2 w-full border-b-2 border-solid"></div>
+                            <div className="text-2xl font-bold ">
+                              {date.getDate()}.
+                            </div>
+                            <div className="text-xs">{month}</div>
                           </div>
-                          <div className="text-xs">{month}</div>
+                        </div>
+                        <div>
+                          <div className="mb-2 font-bold">{event.name}</div>
+                          <Link href={`event/${event.slug}`}>
+                            <a className="btn btn-outline btn-sm">
+                              Go to schedule
+                            </a>
+                          </Link>
                         </div>
                       </div>
-                      <div>
-                        <div className="mb-2 font-bold">{event.name}</div>
-                        <Link href={`event/${event.slug}`}>
-                          <a className="btn btn-outline btn-sm">
-                            Go to schedule
-                          </a>
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-
+          )}
           <div>
             <div className="rounded-lg bg-neutral py-4 px-6 text-neutral-content">
               <h2 className={"text-md uppercase"}>Concluded Events</h2>
