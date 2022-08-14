@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/database";
-import { fromOctaneEvent } from "@/mappers";
 import { getEvents } from "@/clients/octaneClient";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -10,10 +9,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
       if (authorization === `Bearer ${process.env.API_SECRET_KEY}`) {
         const events = await getEvents("2022-01-01", "rlcs2122");
-        const mapped = events.map(fromOctaneEvent).flat();
 
         await prisma.$transaction(
-          mapped.map((event) =>
+          events.map((event) =>
             prisma.event.upsert({
               where: { id: event.id },
               update: event,
