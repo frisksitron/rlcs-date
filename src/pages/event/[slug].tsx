@@ -88,6 +88,7 @@ const Event: NextPage<EventPageProps> = ({ event }) => {
 export const getStaticProps: GetStaticProps = async (context) => {
   const queryClient = new QueryClient();
   const { slug } = context.params as Params;
+
   const event = await prisma.event.findFirst({
     where: { slug },
   });

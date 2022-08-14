@@ -180,17 +180,18 @@ const Home: NextPage = () => {
 export const getStaticProps: GetStaticProps = async (context) => {
   const queryClient = new QueryClient();
 
-  const events = await prisma.event.findMany({
-    orderBy: { startDate: "desc" },
-    take: 10,
+  await queryClient.prefetchQuery(["events"], async () => {
+    return await prisma.event.findMany({
+      orderBy: { startDate: "desc" },
+      take: 10,
+    });
   });
 
-  const transfers = await prisma.transfer.findMany({
-    take: 5,
+  await queryClient.prefetchQuery(["transfers"], async () => {
+    return await prisma.transfer.findMany({
+      take: 5,
+    });
   });
-
-  queryClient.setQueryData(["events"], events);
-  queryClient.setQueryData(["transfers"], transfers);
 
   return {
     props: {
