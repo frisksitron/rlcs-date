@@ -3,11 +3,8 @@ import Link from "next/link";
 import prisma from "@/database";
 import { formatDistanceToNow, format } from "date-fns";
 import dynamic from "next/dynamic";
-import type { Event, Match, Transfer } from "@prisma/client";
-import { EventWithMatches } from "@/types";
-import MatchList from "@/components/MatchList";
-import { getTodaysMatches } from "@/clients/rlcsdateClient";
-import { getTodaysMatches as getTodaysMatchesFromOctane } from "@/clients/octaneClient";
+import type { Event } from "@prisma/client";
+import { getEvents, getTodaysMatches } from "@/clients/rlcsdateClient";
 import {
   getCurrentEvent,
   getPreviousEvents,
@@ -16,6 +13,7 @@ import {
 import Transfers from "@/components/Transfers";
 import { dehydrate, QueryClient, useQuery } from "@tanstack/react-query";
 import MatchListSkeleton from "@/components/MatchList/skeleton";
+import { useEffect, useState } from "react";
 
 const DynamicCountdown = dynamic(() => import("@/components/Countdown"), {
   ssr: false,
@@ -25,72 +23,85 @@ const DynamicMatchList = dynamic(() => import("@/components/MatchList"), {
   ssr: false,
 });
 
-type HomeProps = {
-  currentEvent: EventWithMatches | undefined;
-  upcomingEvents: Event[];
-  previousEvents: Event[];
-};
-
-const Home: NextPage<HomeProps> = ({
-  currentEvent,
-  upcomingEvents,
-  previousEvents,
-}) => {
-  const firstUpcomingEvent = upcomingEvents[0];
+const TodaysMatches = ({ event }: { event: Event }) => {
   const { data: matches, isLoading } = useQuery(
-    ["todays_matches", currentEvent?.id],
-    () => getTodaysMatches(currentEvent?.id)
+    ["todays_matches", event.id],
+    () => getTodaysMatches(event.id)
   );
 
   return (
     <div>
-      {currentEvent ? (
-        <div>
-          <h1 className="text-2xl font-bold">{currentEvent?.name}</h1>
-          {isLoading ? (
-            <>
-              <h2 className="text-lg mt-2 w-36 h-6 bg-slate-500 animate-pulse rounded-sm"></h2>
-              <h2 className="p-2"></h2>
-              <MatchListSkeleton />
-            </>
-          ) : matches ? (
-            <>
-              <h2 className="text-lg mt-2 h-6">Today&apos;s matches</h2>
-              <h2 className="p-2"></h2>
-              <DynamicMatchList matches={matches} />
-            </>
-          ) : (
-            <h2 className="text-lg mt-2">No matches today</h2>
-          )}
-          <div className="text-center mt-4">
-            <Link href={`event/${currentEvent.slug}`}>
-              <a className="btn btn-md btn-primary">See complete schedule</a>
-            </Link>
-          </div>
-        </div>
+      <h1 className="text-2xl font-bold">{event.name}</h1>
+      {isLoading ? (
+        <>
+          <h2 className="mt-2 h-6 w-36 animate-pulse rounded-sm bg-slate-500 text-lg"></h2>
+          <h2 className="p-2"></h2>
+          <MatchListSkeleton />
+        </>
+      ) : matches ? (
+        <>
+          <h2 className="mt-2 h-6 text-lg">Today&apos;s matches</h2>
+          <h2 className="p-2"></h2>
+          <DynamicMatchList matches={matches} />
+        </>
       ) : (
-        <div
-          className="hero min-h-[20rem] rounded-lg"
-          style={{ backgroundImage: `url(rlcs-spring-major-2022.jpg)` }}
-        >
-          <div className="hero-overlay rounded-lg bg-opacity-80"></div>
-          <div className="hero-content flex-col">
-            <div className="text-center lg:pl-5">
-              <h1 className="text-5xl font-bold">{firstUpcomingEvent?.name}</h1>
-            </div>
-            <div className="flex-shrink-0 w-full max-w-sm">
-              <div className="">
-                <DynamicCountdown endTime={firstUpcomingEvent?.startDate} />
+        <h2 className="mt-2 text-lg">No matches today</h2>
+      )}
+      <div className="mt-4 text-center">
+        <Link href={`event/${event.slug}`}>
+          <a className="btn btn-primary btn-md">See complete schedule</a>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+const Home: NextPage = () => {
+  const { data: events } = useQuery(["events"], getEvents);
+
+  const [currentEvent, setCurrentEvent] = useState<Event | undefined>(
+    undefined
+  );
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [previousEvents, setPreviousEvents] = useState<Event[]>([]);
+
+  useEffect(() => {
+    if (events && events.length > 0) {
+      setCurrentEvent(getCurrentEvent(events));
+      setUpcomingEvents(getUpcomingEvents(events));
+      setPreviousEvents(getPreviousEvents(events));
+    }
+  }, [events]);
+
+  return (
+    <div>
+      {currentEvent ? (
+        <TodaysMatches event={currentEvent} />
+      ) : (
+        upcomingEvents.length > 0 && (
+          <div
+            className="hero min-h-[20rem] rounded-lg"
+            style={{ backgroundImage: `url(rlcs-spring-major-2022.jpg)` }}
+          >
+            <div className="hero-overlay rounded-lg bg-opacity-80"></div>
+            <div className="hero-content flex-col">
+              <div className="text-center lg:pl-5">
+                <h1 className="text-5xl font-bold">{upcomingEvents[0].name}</h1>
+              </div>
+              <div className="w-full max-w-sm flex-shrink-0">
+                <div className="">
+                  <DynamicCountdown endTime={upcomingEvents[0].startDate} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )
       )}
 
-      <div className="flex flex-col lg:flex-row justify-between gap-5 mt-10">
-        <div className="flex flex-col gap-5 lg:basis-4/6 grow">
+      <div className="mt-10 flex flex-col justify-between gap-5 lg:flex-row">
+        <div className="flex grow flex-col gap-5 lg:basis-4/6">
           <div>
-            <div className="py-4 px-6 bg-neutral text-neutral-content rounded-lg">
+            <div className="rounded-lg bg-neutral py-4 px-6 text-neutral-content">
               <h2 className={"text-md uppercase"}>Upcoming RLCS events</h2>
               <div className="p-2"></div>
               <div>
@@ -101,8 +112,8 @@ const Home: NextPage<HomeProps> = ({
                   return (
                     <div className={"mb-5 flex"} key={i}>
                       <div className="mt-1.5">
-                        <div className="flex flex-col items-center justify-center w-20 h-24 border-solid border-2 rounded-lg mr-6">
-                          <div className="border-solid border-b-2 -mt-1 mb-2 w-full"></div>
+                        <div className="mr-6 flex h-24 w-20 flex-col items-center justify-center rounded-lg border-2 border-solid">
+                          <div className="-mt-1 mb-2 w-full border-b-2 border-solid"></div>
                           <div className="text-2xl font-bold ">
                             {date.getDate()}.
                           </div>
@@ -110,9 +121,9 @@ const Home: NextPage<HomeProps> = ({
                         </div>
                       </div>
                       <div>
-                        <div className="font-bold mb-2">{event.name}</div>
+                        <div className="mb-2 font-bold">{event.name}</div>
                         <Link href={`event/${event.slug}`}>
-                          <a className="btn btn-sm btn-outline">
+                          <a className="btn btn-outline btn-sm">
                             Go to schedule
                           </a>
                         </Link>
@@ -125,7 +136,7 @@ const Home: NextPage<HomeProps> = ({
           </div>
 
           <div>
-            <div className="py-4 px-6 bg-neutral text-neutral-content rounded-lg">
+            <div className="rounded-lg bg-neutral py-4 px-6 text-neutral-content">
               <h2 className={"text-md uppercase"}>Concluded Events</h2>
               <div className="p-2"></div>
               <div>
@@ -138,11 +149,11 @@ const Home: NextPage<HomeProps> = ({
                   return (
                     <div className={"mb-5"} key={i}>
                       <div className="font-bold">{event.name} </div>
-                      <div className="font-normal mb-2">
+                      <div className="mb-2 font-normal">
                         Concluded {distanceToNow}
                       </div>
                       <Link href={`event/${event.slug}`}>
-                        <a className="btn btn-sm btn-outline">Go to results</a>
+                        <a className="btn btn-outline btn-sm">Go to results</a>
                       </Link>
                     </div>
                   );
@@ -154,7 +165,7 @@ const Home: NextPage<HomeProps> = ({
 
         <div className="basis-0 lg:basis-2/6">
           <div>
-            <div className="py-4 px-6 bg-neutral text-neutral-content rounded-lg">
+            <div className="rounded-lg bg-neutral py-4 px-6 text-neutral-content">
               <h2 className={"text-md uppercase"}>Recent transfers</h2>
               <div className="p-2"></div>
               <Transfers />
@@ -168,31 +179,21 @@ const Home: NextPage<HomeProps> = ({
 
 export const getStaticProps: GetStaticProps = async (context) => {
   const queryClient = new QueryClient();
+
   const events = await prisma.event.findMany({
     orderBy: { startDate: "desc" },
     take: 10,
   });
 
-  const currentEvent = getCurrentEvent(events);
-
-  if (currentEvent) {
-    // await queryClient.prefetchQuery(["todays_matches", currentEvent.id], () =>
-    //   getTodaysMatchesFromOctane(currentEvent.id)
-    // );
-  }
-
   const transfers = await prisma.transfer.findMany({
     take: 5,
   });
 
+  queryClient.setQueryData(["events"], events);
   queryClient.setQueryData(["transfers"], transfers);
 
   return {
     props: {
-      currentEvent: currentEvent,
-      upcomingEvents: getUpcomingEvents(events),
-      previousEvents: getPreviousEvents(events),
-      transfers,
       dehydratedState: dehydrate(queryClient),
       revalidate: 1,
     },

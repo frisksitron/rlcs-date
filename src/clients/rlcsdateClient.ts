@@ -3,8 +3,15 @@ import { EventResponse } from "@/pages/api/event/[id]";
 import { MatchesResponse } from "@/pages/api/event/[id]/matches";
 import { TransfersResponse } from "@/pages/api/transfers";
 import { LeaderboardResponse } from "@/pages/api/leaderboard";
+import { EventsResponse } from "@/pages/api/event";
 
 const rlcsdateClient = axios.create();
+
+export const getEvents = async () => {
+  const { data } = await rlcsdateClient.get<EventsResponse>("/api/events");
+
+  return data.events;
+};
 
 export const getEvent = async (eventId: string) => {
   const response = await rlcsdateClient.get<EventResponse>(

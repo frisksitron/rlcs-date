@@ -1,4 +1,4 @@
-import { fromOctaneMatch } from "@/mappers";
+import { fromOctaneEvent, fromOctaneMatch } from "@/mappers";
 import axios from "axios";
 import { isSameDay } from "date-fns";
 import * as R from "remeda";
@@ -95,7 +95,7 @@ export const getEvents = async (after: string, group: string) => {
     `events?after=${after}&group=${group}`
   );
 
-  return response.data.events;
+  return response.data.events.map(fromOctaneEvent).flat();
 };
 
 export const getEventMatches = async (eventId: string) => {
