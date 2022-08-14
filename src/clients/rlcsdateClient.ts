@@ -8,7 +8,7 @@ import { EventsResponse } from "@/pages/api/event";
 const rlcsdateClient = axios.create();
 
 export const getEvents = async () => {
-  const { data } = await rlcsdateClient.get<EventsResponse>("/api/events");
+  const { data } = await rlcsdateClient.get<EventsResponse>("/api/event");
 
   return data.events;
 };
