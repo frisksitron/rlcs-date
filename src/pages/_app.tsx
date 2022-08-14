@@ -29,11 +29,11 @@ function MyApp({ Component, pageProps }: AppProps) {
             <Navbar />
           </header>
 
-          <main className={"container max-w-5xl mx-auto px-4 mb-20"}>
+          <main className={"container mx-auto mb-20 max-w-5xl px-4"}>
             <Component {...pageProps} />
           </main>
 
-          <footer className="footer footer-center p-4 bg-neutral text-neutral-content">
+          <footer className="footer footer-center bg-neutral p-4 text-neutral-content">
             <div>
               <p>Data provided by Liquipedia.</p>
             </div>

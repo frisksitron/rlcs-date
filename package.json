@@ -10,7 +10,7 @@
     "lint": "next lint",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "prisma:generate": "prisma generate",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.(ts|tsx)\""
   },
   "dependencies": {
     "@prisma/client": "^4.2.1",

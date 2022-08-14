@@ -68,7 +68,7 @@ const Event: NextPage<EventPageProps> = ({ event }) => {
     <div>
       <div className={"col-span-3"}>
         <div className={"mb-10"}>
-          <h2 className={"text-3xl mb-2"}>{event.name}</h2>
+          <h2 className={"mb-2 text-3xl"}>{event.name}</h2>
           <a
             href={event.liquipediaUrl}
             className={"link text-sm"}

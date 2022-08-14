@@ -25,7 +25,7 @@ const Index = () => {
           </label>
           <ul
             tabIndex={0}
-            className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-neutral rounded-box w-52"
+            className="dropdown-content menu rounded-box menu-compact mt-3 w-52 bg-neutral p-2 shadow"
           >
             <li>
               <Link href={"/leaderboard"}>Leaderboard</Link>
@@ -42,7 +42,7 @@ const Index = () => {
           </ul>
         </div>
         <Link href={"/"}>
-          <a className="btn btn-ghost normal-case text-xl">
+          <a className="btn btn-ghost text-xl normal-case">
             <Image src={logo} alt="rlcs.date logo" height={42} width={42} />
             <div className="ml-2">rlcs.date</div>
           </a>

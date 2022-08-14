@@ -13,7 +13,7 @@ const LeaderboardTable = () => {
 
   return (
     <div className="overflow-x-auto">
-      <table className={"table table-zebra w-full"}>
+      <table className={"table-zebra table w-full"}>
         <thead>
           <tr>
             <th className={"!relative"}></th>
@@ -36,20 +36,20 @@ const LeaderboardTable = () => {
             return (
               <tr key={team.name}>
                 <td>
-                  <div className="flex text-center font-bold justify-center leading-[1px]">
+                  <div className="flex justify-center text-center font-bold leading-[1px]">
                     <div className={indexClass}>{index + 1}</div>
                   </div>
                 </td>
                 <td>
                   <div className="flex items-center space-x-3">
                     <div className="avatar">
-                      <div className="w-6 h-6 lg:w-12 lg:h-12">
+                      <div className="h-6 w-6 lg:h-12 lg:w-12">
                         <TeamLogo team={team.tag} />
                       </div>
                     </div>
                     <div className={"pl-1"}>
                       <div className="font-bold lg:hidden">{team.tag}</div>
-                      <div className="font-bold hidden lg:block">
+                      <div className="hidden font-bold lg:block">
                         {team.name}
                       </div>
                     </div>
@@ -85,12 +85,12 @@ const Leaderboard: NextPage = () => {
       <div className="p-4"></div>
       <div className="flex flex-col md:flex-row">
         <div className="flex items-center">
-          <div className="h-8 w-8 bg-green-900 mr-1.5 rounded-full"></div>
+          <div className="mr-1.5 h-8 w-8 rounded-full bg-green-900"></div>
           <div> = Qualify directly to Worlds</div>
         </div>
         <div className="p-2 md:p-4"></div>
         <div className="flex items-center">
-          <div className="h-8 w-8 bg-yellow-900 mr-1.5 rounded-full"></div>
+          <div className="mr-1.5 h-8 w-8 rounded-full bg-yellow-900"></div>
           <div> = Qualify for Wildcards</div>
         </div>
       </div>
